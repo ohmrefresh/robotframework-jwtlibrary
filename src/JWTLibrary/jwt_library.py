@@ -13,7 +13,10 @@ from .keywords.token_decoding import TokenDecodingKeywords
 from .keywords.token_validation import TokenValidationKeywords
 from .keywords.utilities import UtilityKeywords
 from .version import __version__
+import logging
 
+# Define a logger attribute
+logger = logging.getLogger(__name__)
 
 class JWTLibrary(TokenGenerationKeywords, TokenDecodingKeywords, 
                 TokenValidationKeywords, UtilityKeywords):

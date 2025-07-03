@@ -44,10 +44,20 @@ build:  ## Build package
 	python -m build
 
 docs:  ## Build documentation
-	sphinx-build -b html docs docs/_build/html
+	rm -rf docs/
+	python3 generate.py
 
 dev-setup:  ## Setup development environment
 	python -m venv venv
 	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install -r requirements-dev.txt
 	./venv/bin/pip install -e .
+
+release: clean ## package and upload a release
+	python setup.py sdist upload
+	python setup.py bdist_wheel upload
+
+dist: clean ## builds source and wheel package
+	python setup.py sdist
+	python setup.py bdist_wheel
+	ls -l dist

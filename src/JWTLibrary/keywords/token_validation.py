@@ -79,7 +79,7 @@ class TokenValidationKeywords:
             
             exp_timestamp = payload['exp']
             exp_datetime = parse_jwt_timestamp(exp_timestamp)
-            current_time = datetime.utcnow()
+            current_time = datetime.now()
             
             is_expired = current_time > exp_datetime
             time_until_expiry = (exp_datetime - current_time).total_seconds()

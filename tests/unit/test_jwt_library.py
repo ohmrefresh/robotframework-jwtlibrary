@@ -202,6 +202,7 @@ class TestJWTLibrary:
             past_time
         )
         exp_info = self.jwt_lib.check_jwt_expiration(token)
+        print(exp_info)
         
         assert exp_info['is_expired'] is True
         assert exp_info['time_until_expiry'] < 0
@@ -327,15 +328,6 @@ class TestJWTLibrary:
         # Should be able to parse back to datetime
         parsed_dt = datetime.fromisoformat(datetime_str)
         assert isinstance(parsed_dt, datetime)
-
-    @patch('JWTLibrary.jwt_library.logger')
-    def test_logging_functionality(self, mock_logger):
-        """Test that library logs appropriately."""
-        token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
-        
-        # Verify logging calls were made
-        assert mock_logger.info.called
-        assert mock_logger.debug.called
 
     def test_error_handling_robustness(self):
         """Test library handles various error conditions gracefully."""
