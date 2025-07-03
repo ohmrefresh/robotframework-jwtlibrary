@@ -1,10 +1,5 @@
 # JWT Robot Framework Library
 
-[![CI](https://github.com/yourusername/jwt-robotframework-library/workflows/CI/badge.svg)](https://github.com/yourusername/jwt-robotframework-library/actions)
-[![PyPI version](https://badge.fury.io/py/robotframework-jwtlibrary.svg)](https://badge.fury.io/py/robotframework-jwtlibrary)
-[![Python Support](https://img.shields.io/pypi/pyversions/robotframework-jwtlibrary.svg)](https://pypi.org/project/robotframework-jwtlibrary/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Downloads](https://pepy.tech/badge/robotframework-jwtlibrary)](https://pepy.tech/project/robotframework-jwtlibrary)
 
 A comprehensive Robot Framework library for JSON Web Token (JWT) operations, enabling robust testing of JWT-based authentication and authorization in your test automation.
 
@@ -30,7 +25,7 @@ pip install robotframework-jwtlibrary
 ### From source
 
 ```bash
-git clone https://github.com/yourusername/jwt-robotframework-library.git
+git clone https://github.com/ohmrefresh/robotframework-jwtlibrary.git
 cd jwt-robotframework-library
 pip install -e .
 ```
@@ -227,59 +222,3 @@ robot tests/robot/acceptance/
 # Run all tests
 make test
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](docs/contributing.md) for details.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/jwt-robotframework-library.git
-cd jwt-robotframework-library
-
-# Setup development environment
-make dev-setup
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run tests
-make test
-
-# Check code quality
-make lint
-```
-
-## 📝 Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## 🌟 Support
-
-- **Documentation**: [Read the docs](https://jwt-robotframework-library.readthedocs.io/)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/jwt-robotframework-library/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/jwt-robotframework-library/discussions)
-- **Stack Overflow**: Tag your questions with `robotframework` and `jwt`
-
-## 🏆 Acknowledgments
-
-- Built on top of the excellent [PyJWT](https://github.com/jpadilla/pyjwt) library
-- Inspired by the Robot Framework community
-- Thanks to all contributors and users
-
-## 📊 Project Stats
-
-![GitHub stars](https://img.shields.io/github/stars/yourusername/jwt-robotframework-library?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/jwt-robotframework-library?style=social)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/jwt-robotframework-library)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/jwt-robotframework-library)
-
----
-
-**Made with ❤️ for the Robot Framework community**
