@@ -4,7 +4,7 @@ import pytest
 import jwt
 from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
-
+import time
 from JWTLibrary.jwt_library import JWTLibrary
 from JWTLibrary.exceptions import (
     JWTTokenGenerationError,
@@ -76,7 +76,7 @@ class TestJWTLibrary:
         
         # Check expiration is approximately 1 hour from now
         exp_time = datetime.fromtimestamp(decoded['exp'])
-        expected_exp = datetime.utcnow() + timedelta(hours=1)
+        expected_exp = datetime.now() + timedelta(hours=1)
         time_diff = abs((exp_time - expected_exp).total_seconds())
         assert time_diff < 60  # Within 1 minute tolerance
 
@@ -264,8 +264,9 @@ class TestJWTLibrary:
         """Test comparing identical JWT tokens."""
         payload = {"user_id": 123, "role": "admin"}
         token1 = self.jwt_lib.generate_jwt_token(payload, self.secret_key)
+        time.sleep(1)  # Ensure iat is different
         token2 = self.jwt_lib.generate_jwt_token(payload, self.secret_key)
-        
+
         # Note: Tokens won't be identical due to iat timestamp
         comparison = self.jwt_lib.compare_jwt_tokens(token1, token2)
         assert comparison['are_identical'] is False  # Due to different iat timestamps
