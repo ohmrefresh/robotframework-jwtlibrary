@@ -12,9 +12,6 @@ jobs:
       url: https://pypi.org/p/ohmrefresh
     permissions:
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
-    defaults:
-      run:
-        working-directory: ./src
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
