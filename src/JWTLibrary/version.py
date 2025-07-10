@@ -7,4 +7,4 @@ __license__ = "Apache 2.0"
 __copyright__ = "Copyright 2024 JWT Robot Framework Library Team"
 
 # Version info tuple
-VERSION_INFO = tuple(map(int, __version__.split('.')))
+VERSION_INFO = tuple(map(int, __version__.split(".")))

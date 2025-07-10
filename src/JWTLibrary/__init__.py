@@ -1,4 +1,3 @@
-
 """
 JWT Library for Robot Framework
 
@@ -12,7 +11,7 @@ License: Apache 2.0
 from .jwt_library import JWTLibrary
 from .version import __version__
 
-__all__ = ['JWTLibrary', '__version__']
+__all__ = ["JWTLibrary", "__version__"]
 
 # Make the library class available at package level
 JWTLibrary = JWTLibrary

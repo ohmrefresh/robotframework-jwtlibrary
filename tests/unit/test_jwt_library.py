@@ -1,17 +1,19 @@
 """Unit tests for JWT Library main functionality."""
 
-import pytest
-import jwt
-from datetime import datetime, timedelta, timezone
 import time
-from JWTLibrary.jwt_library import JWTLibrary
+from datetime import datetime, timedelta, timezone
+
+import jwt
+import pytest
+
 from JWTLibrary.exceptions import (
-    JWTTokenGenerationError,
-    JWTTokenDecodingError,
+    JWTClaimNotFoundError,
     JWTExpiredTokenError,
     JWTInvalidSignatureError,
-    JWTClaimNotFoundError
+    JWTTokenDecodingError,
+    JWTTokenGenerationError,
 )
+from JWTLibrary.jwt_library import JWTLibrary
 
 
 class TestJWTLibrary:
@@ -25,50 +27,46 @@ class TestJWTLibrary:
             "user_id": 123,
             "username": "testuser",
             "role": "admin",
-            "email": "test@example.com"
+            "email": "test@example.com",
         }
 
     def test_library_initialization(self):
         """Test library initialization."""
         assert self.jwt_lib.library_name == "JWTLibrary"
-        assert hasattr(self.jwt_lib, 'library_version')
-        assert self.jwt_lib.ROBOT_LIBRARY_SCOPE == 'GLOBAL'
+        assert hasattr(self.jwt_lib, "library_version")
+        assert self.jwt_lib.ROBOT_LIBRARY_SCOPE == "GLOBAL"
 
     def test_generate_basic_jwt_token(self):
         """Test basic JWT token generation."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         assert isinstance(token, str)
-        assert len(token.split('.')) == 3  # JWT has 3 parts
+        assert len(token.split(".")) == 3  # JWT has 3 parts
         # Verify token can be decoded
-        decoded = jwt.decode(token, self.secret_key, algorithms=['HS256'])
-        assert decoded['user_id'] == 123
-        assert decoded['username'] == "testuser"
-        assert decoded['role'] == "admin"
+        decoded = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+        assert decoded["user_id"] == 123
+        assert decoded["username"] == "testuser"
+        assert decoded["role"] == "admin"
 
     def test_generate_jwt_token_with_custom_algorithm(self):
         """Test JWT token generation with custom algorithm."""
         token = self.jwt_lib.generate_jwt_token(
-            self.test_payload,
-            self.secret_key,
-            algorithm="HS512"
+            self.test_payload, self.secret_key, algorithm="HS512"
         )
         # Verify token header contains correct algorithm
         header = jwt.get_unverified_header(token)
-        assert header['alg'] == 'HS512'
+        assert header["alg"] == "HS512"
         # Verify token can be decoded with correct algorithm
-        decoded = jwt.decode(token, self.secret_key, algorithms=['HS512'])
-        assert decoded['user_id'] == 123
+        decoded = jwt.decode(token, self.secret_key, algorithms=["HS512"])
+        assert decoded["user_id"] == 123
 
     def test_generate_jwt_token_with_custom_expiration(self):
         """Test JWT token generation with custom expiration."""
         token = self.jwt_lib.generate_jwt_token(
-            self.test_payload,
-            self.secret_key,
-            expiration_hours=1
+            self.test_payload, self.secret_key, expiration_hours=1
         )
-        decoded = jwt.decode(token, self.secret_key, algorithms=['HS256'])
+        decoded = jwt.decode(token, self.secret_key, algorithms=["HS256"])
         # Check expiration is approximately 1 hour from now
-        exp_time = datetime.fromtimestamp(decoded['exp'])
+        exp_time = datetime.fromtimestamp(decoded["exp"])
         expected_exp = datetime.now() + timedelta(hours=1)
         time_diff = abs((exp_time - expected_exp).total_seconds())
         assert time_diff < 60  # Within 1 minute tolerance
@@ -77,25 +75,23 @@ class TestJWTLibrary:
         """Test JWT token generation with invalid algorithm."""
         with pytest.raises(JWTTokenGenerationError):
             self.jwt_lib.generate_jwt_token(
-                self.test_payload,
-                self.secret_key,
-                algorithm="INVALID"
+                self.test_payload, self.secret_key, algorithm="INVALID"
             )
 
     def test_decode_jwt_payload_valid_token(self):
         """Test decoding valid JWT payload."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         decoded = self.jwt_lib.decode_jwt_payload(token, self.secret_key)
-        assert decoded['user_id'] == 123
-        assert decoded['username'] == "testuser"
-        assert decoded['role'] == "admin"
+        assert decoded["user_id"] == 123
+        assert decoded["username"] == "testuser"
+        assert decoded["role"] == "admin"
 
     def test_decode_jwt_payload_without_verification(self):
         """Test decoding JWT payload without signature verification."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         decoded = self.jwt_lib.decode_jwt_payload(token, verify_signature=False)
-        assert decoded['user_id'] == 123
-        assert decoded['username'] == "testuser"
+        assert decoded["user_id"] == 123
+        assert decoded["username"] == "testuser"
 
     def test_decode_jwt_payload_wrong_secret(self):
         """Test decoding JWT payload with wrong secret key."""
@@ -108,9 +104,7 @@ class TestJWTLibrary:
         # Create token that expires immediately
         past_time = datetime.now(tz=timezone.utc) - timedelta(hours=1)
         token = self.jwt_lib.generate_jwt_token_with_custom_expiration(
-            self.test_payload,
-            self.secret_key,
-            past_time
+            self.test_payload, self.secret_key, past_time
         )
         with pytest.raises(JWTExpiredTokenError):
             self.jwt_lib.decode_jwt_payload(token, self.secret_key)
@@ -124,8 +118,8 @@ class TestJWTLibrary:
         """Test decoding JWT header."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         header = self.jwt_lib.decode_jwt_header(token)
-        assert header['alg'] == 'HS256'
-        assert header['typ'] == 'JWT'
+        assert header["alg"] == "HS256"
+        assert header["typ"] == "JWT"
 
     def test_verify_jwt_token_valid(self):
         """Test verifying valid JWT token."""
@@ -160,10 +154,7 @@ class TestJWTLibrary:
         """Test getting JWT claim with signature verification."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         role = self.jwt_lib.get_jwt_claim(
-            token,
-            "role",
-            secret_key=self.secret_key,
-            verify_signature=True
+            token, "role", secret_key=self.secret_key, verify_signature=True
         )
         assert role == "admin"
 
@@ -171,42 +162,37 @@ class TestJWTLibrary:
         """Test checking expiration of non-expired token."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         exp_info = self.jwt_lib.check_jwt_expiration(token)
-        assert exp_info['is_expired'] is False
-        assert exp_info['time_until_expiry'] > 0
-        assert exp_info['has_expiration'] is True
+        assert exp_info["is_expired"] is False
+        assert exp_info["time_until_expiry"] > 0
+        assert exp_info["has_expiration"] is True
 
     def test_check_jwt_expiration_expired(self):
         """Test checking expiration of expired token."""
         past_time = datetime.now(tz=timezone.utc) - timedelta(days=1)
         token = self.jwt_lib.generate_jwt_token_with_custom_expiration(
-            self.test_payload,
-            self.secret_key,
-            past_time
+            self.test_payload, self.secret_key, past_time
         )
         exp_info = self.jwt_lib.check_jwt_expiration(token)
-        assert exp_info['is_expired'] is True
-        assert exp_info['time_until_expiry'] < 0
+        assert exp_info["is_expired"] is True
+        assert exp_info["time_until_expiry"] < 0
 
     def test_check_jwt_expiration_no_exp_claim(self):
         """Test checking expiration of token without exp claim."""
         token = self.jwt_lib.generate_jwt_token_without_expiration(
-            self.test_payload,
-            self.secret_key
+            self.test_payload, self.secret_key
         )
         exp_info = self.jwt_lib.check_jwt_expiration(token)
-        assert exp_info['has_expiration'] is False
-        assert exp_info['is_expired'] is False
+        assert exp_info["has_expiration"] is False
+        assert exp_info["is_expired"] is False
 
     def test_create_jwt_payload(self):
         """Test creating JWT payload from keyword arguments."""
         payload = self.jwt_lib.create_jwt_payload(
-            user_id=456,
-            role="user",
-            email="user@test.com"
+            user_id=456, role="user", email="user@test.com"
         )
-        assert payload['user_id'] == 456
-        assert payload['role'] == "user"
-        assert payload['email'] == "user@test.com"
+        assert payload["user_id"] == 456
+        assert payload["role"] == "user"
+        assert payload["email"] == "user@test.com"
 
     def test_validate_jwt_claims_valid(self):
         """Test validating JWT claims with correct values."""
@@ -225,15 +211,12 @@ class TestJWTLibrary:
     def test_generate_jwt_token_with_claims(self):
         """Test generating JWT token using keyword arguments."""
         token = self.jwt_lib.generate_jwt_token_with_claims(
-            self.secret_key,
-            user_id=789,
-            role="moderator",
-            email="mod@test.com"
+            self.secret_key, user_id=789, role="moderator", email="mod@test.com"
         )
         decoded = self.jwt_lib.decode_jwt_payload(token, self.secret_key)
-        assert decoded['user_id'] == 789
-        assert decoded['role'] == "moderator"
-        assert decoded['email'] == "mod@test.com"
+        assert decoded["user_id"] == 789
+        assert decoded["role"] == "moderator"
+        assert decoded["email"] == "mod@test.com"
 
     def test_compare_jwt_tokens_identical(self):
         """Test comparing identical JWT tokens."""
@@ -244,7 +227,7 @@ class TestJWTLibrary:
 
         # Note: Tokens won't be identical due to iat timestamp
         comparison = self.jwt_lib.compare_jwt_tokens(token1, token2)
-        assert comparison['are_identical'] is False  # Due to different iat timestamps
+        assert comparison["are_identical"] is False  # Due to different iat timestamps
 
     def test_compare_jwt_tokens_different(self):
         """Test comparing different JWT tokens."""
@@ -253,27 +236,27 @@ class TestJWTLibrary:
         token1 = self.jwt_lib.generate_jwt_token(payload1, self.secret_key)
         token2 = self.jwt_lib.generate_jwt_token(payload2, self.secret_key)
         comparison = self.jwt_lib.compare_jwt_tokens(token1, token2)
-        assert comparison['are_identical'] is False
-        assert comparison['payload_differences_count'] > 0
+        assert comparison["are_identical"] is False
+        assert comparison["payload_differences_count"] > 0
 
     def test_get_jwt_token_info(self):
         """Test getting comprehensive JWT token information."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         info = self.jwt_lib.get_jwt_token_info(token)
-        assert info['algorithm'] == 'HS256'
-        assert info['type'] == 'JWT'
-        assert info['claims_count'] > 0
-        assert 'issued_at' in info
-        assert 'expires_at' in info
+        assert info["algorithm"] == "HS256"
+        assert info["type"] == "JWT"
+        assert info["claims_count"] > 0
+        assert "issued_at" in info
+        assert "expires_at" in info
 
     def test_extract_jwt_timestamps(self):
         """Test extracting JWT timestamp claims."""
         token = self.jwt_lib.generate_jwt_token(self.test_payload, self.secret_key)
         timestamps = self.jwt_lib.extract_jwt_timestamps(token)
-        assert 'iat' in timestamps
-        assert 'exp' in timestamps
-        assert 'age_seconds' in timestamps
-        assert 'expires_in_seconds' in timestamps
+        assert "iat" in timestamps
+        assert "exp" in timestamps
+        assert "age_seconds" in timestamps
+        assert "expires_in_seconds" in timestamps
 
     def test_generate_current_timestamp(self):
         """Test generating current timestamp."""
@@ -314,28 +297,25 @@ class TestJWTLibrary:
 
     def test_multiple_algorithms_support(self):
         """Test library supports multiple JWT algorithms."""
-        algorithms = ['HS256', 'HS384', 'HS512']
+        algorithms = ["HS256", "HS384", "HS512"]
         for alg in algorithms:
             token = self.jwt_lib.generate_jwt_token(
-                self.test_payload,
-                self.secret_key,
-                algorithm=alg
+                self.test_payload, self.secret_key, algorithm=alg
             )
             # Verify algorithm in header
             header = self.jwt_lib.decode_jwt_header(token)
-            assert header['alg'] == alg
+            assert header["alg"] == alg
             # Verify token can be decoded
-            decoded = self.jwt_lib.decode_jwt_payload(token, self.secret_key
-                                                      , algorithm=alg)
-            assert decoded['user_id'] == 123
+            decoded = self.jwt_lib.decode_jwt_payload(
+                token, self.secret_key, algorithm=alg
+            )
+            assert decoded["user_id"] == 123
 
     def test_edge_cases(self):
         """Test various edge cases."""
         # Very short expiration
         token = self.jwt_lib.generate_jwt_token(
-            self.test_payload,
-            self.secret_key,
-            expiration_hours=0.001  # Very short
+            self.test_payload, self.secret_key, expiration_hours=0.001  # Very short
         )
         assert isinstance(token, str)
         # Large payload
@@ -346,5 +326,5 @@ class TestJWTLibrary:
         unicode_payload = {"message": "Hello 世界", "emoji": "🚀"}
         token = self.jwt_lib.generate_jwt_token(unicode_payload, self.secret_key)
         decoded = self.jwt_lib.decode_jwt_payload(token, self.secret_key)
-        assert decoded['message'] == "Hello 世界"
-        assert decoded['emoji'] == "🚀"
+        assert decoded["message"] == "Hello 世界"
+        assert decoded["emoji"] == "🚀"

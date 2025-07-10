@@ -1,21 +1,24 @@
 """Token validation keywords for JWT Library."""
 
-import jwt
 from datetime import datetime, timezone
-from typing import Dict, Any, Union
-from robot.api.deco import keyword
+from typing import Any, Dict, Union
+
+import jwt
 from robot.api import logger
+from robot.api.deco import keyword
 
 from ..constants import DEFAULT_ALGORITHM
 from ..exceptions import JWTTokenValidationError
-from ..utils import validate_algorithm, parse_jwt_timestamp
+from ..utils import parse_jwt_timestamp, validate_algorithm
 
 
 class TokenValidationKeywords:
     """Keywords for JWT token validation."""
 
     @keyword("Verify JWT Token")
-    def verify_jwt_token(self, token: str, secret_key: str, algorithm: str = None) -> bool:
+    def verify_jwt_token(
+        self, token: str, secret_key: str, algorithm: str = None
+    ) -> bool:
         """
         Verifies if a JWT token is valid and not expired.
         Arguments:
@@ -31,11 +34,15 @@ class TokenValidationKeywords:
         try:
             algorithm = algorithm or DEFAULT_ALGORITHM
             validate_algorithm(algorithm)
-            
+
             jwt.decode(token, secret_key, algorithms=[algorithm])
             logger.info("JWT token verification successful")
             return True
-        except (jwt.ExpiredSignatureError, jwt.InvalidSignatureError, jwt.InvalidTokenError):
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidSignatureError,
+            jwt.InvalidTokenError,
+        ):
             logger.info("JWT token verification failed")
             return False
         except Exception as e:
@@ -43,7 +50,9 @@ class TokenValidationKeywords:
             return False
 
     @keyword("Check JWT Expiration")
-    def check_jwt_expiration(self, token: str, secret_key: str = None) -> Dict[str, Any]:
+    def check_jwt_expiration(
+        self, token: str, secret_key: str = None
+    ) -> Dict[str, Any]:
         """
         Checks JWT token expiration details.
         Arguments:
@@ -61,15 +70,15 @@ class TokenValidationKeywords:
         try:
             # Decode without verification to get expiration info
             payload = jwt.decode(token, options={"verify_signature": False})
-            
-            if 'exp' not in payload:
+
+            if "exp" not in payload:
                 return {
-                    'expires_at': None,
-                    'is_expired': False,
-                    'time_until_expiry': None,
-                    'has_expiration': False
+                    "expires_at": None,
+                    "is_expired": False,
+                    "time_until_expiry": None,
+                    "has_expiration": False,
                 }
-            exp_timestamp = payload['exp']
+            exp_timestamp = payload["exp"]
             exp_datetime = parse_jwt_timestamp(exp_timestamp)
             current_time = datetime.now(tz=timezone.utc)
             # Ensure both datetimes are timezone-aware for comparison
@@ -78,12 +87,14 @@ class TokenValidationKeywords:
             is_expired = current_time > exp_datetime
             time_until_expiry = (exp_datetime - current_time).total_seconds()
             expiration_info = {
-                'expires_at': exp_datetime.isoformat(),
-                'is_expired': is_expired,
-                'time_until_expiry': time_until_expiry,
-                'has_expiration': True
+                "expires_at": exp_datetime.isoformat(),
+                "is_expired": is_expired,
+                "time_until_expiry": time_until_expiry,
+                "has_expiration": True,
             }
-            logger.info(f"Token expiration check: expires in {time_until_expiry} seconds")
+            logger.info(
+                f"Token expiration check: expires in {time_until_expiry} seconds"
+            )
             return expiration_info
         except Exception as e:
             error_msg = f"JWT expiration check failed: {str(e)}"
@@ -91,8 +102,13 @@ class TokenValidationKeywords:
             raise JWTTokenValidationError(error_msg)
 
     @keyword("Validate JWT Claims")
-    def validate_jwt_claims(self, token: str, expected_claims: Dict[str, Any], 
-                           secret_key: str = None, verify_signature: bool = False) -> bool:
+    def validate_jwt_claims(
+        self,
+        token: str,
+        expected_claims: Dict[str, Any],
+        secret_key: str = None,
+        verify_signature: bool = False,
+    ) -> bool:
         """
         Validates that JWT token contains expected claims with correct values.
         Arguments:
@@ -102,7 +118,7 @@ class TokenValidationKeywords:
         - ``verify_signature``: Whether to verify token signature
         Returns:
         - True if all expected claims match, False otherwise
-        
+
         Examples:
         | ${expected}=    Create Dictionary    user_id=123    role=admin
         | ${valid}=    Validate JWT Claims    ${token}    ${expected}
@@ -110,11 +126,14 @@ class TokenValidationKeywords:
         """
         try:
             from .token_decoding import TokenDecodingKeywords
+
             decoder = TokenDecodingKeywords()
-            
+
             # Get payload
-            payload = decoder.decode_jwt_payload(token, secret_key, verify_signature=verify_signature)
-            
+            payload = decoder.decode_jwt_payload(
+                token, secret_key, verify_signature=verify_signature
+            )
+
             # Check each expected claim
             mismatched_claims = []
             missing_claims = []
@@ -122,19 +141,23 @@ class TokenValidationKeywords:
                 if claim_name not in payload:
                     missing_claims.append(claim_name)
                 elif payload[claim_name] != expected_value:
-                    mismatched_claims.append({
-                        'claim': claim_name,
-                        'expected': expected_value,
-                        'actual': payload[claim_name]
-                    })
-            
+                    mismatched_claims.append(
+                        {
+                            "claim": claim_name,
+                            "expected": expected_value,
+                            "actual": payload[claim_name],
+                        }
+                    )
+
             if missing_claims or mismatched_claims:
-                logger.info(f"Claim validation failed - Missing: {missing_claims}, Mismatched: {mismatched_claims}")
+                logger.info(
+                    f"Claim validation failed - Missing: {missing_claims}, Mismatched: {mismatched_claims}"
+                )
                 return False
-            
+
             logger.info(f"All {len(expected_claims)} claims validated successfully")
             return True
-            
+
         except Exception as e:
             logger.error(f"JWT claims validation error: {str(e)}")
             return False
@@ -154,18 +177,23 @@ class TokenValidationKeywords:
         """
         try:
             from .token_decoding import TokenDecodingKeywords
+
             decoder = TokenDecodingKeywords()
-            
+
             header = decoder.decode_jwt_header(token)
-            actual_algorithm = header.get('alg')
-            
+            actual_algorithm = header.get("alg")
+
             if actual_algorithm == expected_algorithm:
-                logger.info(f"JWT algorithm verification successful: {actual_algorithm}")
+                logger.info(
+                    f"JWT algorithm verification successful: {actual_algorithm}"
+                )
                 return True
             else:
-                logger.info(f"JWT algorithm mismatch - Expected: {expected_algorithm}, Actual: {actual_algorithm}")
+                logger.info(
+                    f"JWT algorithm mismatch - Expected: {expected_algorithm}, Actual: {actual_algorithm}"
+                )
                 return False
-                
+
         except Exception as e:
             logger.error(f"JWT algorithm check error: {str(e)}")
             return False
@@ -184,61 +212,66 @@ class TokenValidationKeywords:
         """
         try:
             validation_result = {
-                'is_valid_structure': False,
-                'has_three_parts': False,
-                'has_valid_header': False,
-                'has_valid_payload': False,
-                'header_info': None,
-                'payload_info': None,
-                'errors': []
+                "is_valid_structure": False,
+                "has_three_parts": False,
+                "has_valid_header": False,
+                "has_valid_payload": False,
+                "header_info": None,
+                "payload_info": None,
+                "errors": [],
             }
             # Check if token has three parts
-            parts = token.split('.')
+            parts = token.split(".")
             if len(parts) == 3:
-                validation_result['has_three_parts'] = True
+                validation_result["has_three_parts"] = True
             else:
-                validation_result['errors'].append(f"Token has {len(parts)} parts, expected 3")
+                validation_result["errors"].append(
+                    f"Token has {len(parts)} parts, expected 3"
+                )
                 return validation_result
-            
+
             try:
                 from .token_decoding import TokenDecodingKeywords
+
                 decoder = TokenDecodingKeywords()
                 # Validate header
                 header = decoder.decode_jwt_header(token)
-                validation_result['has_valid_header'] = True
-                validation_result['header_info'] = {
-                    'algorithm': header.get('alg'),
-                    'type': header.get('typ'),
-                    'keys': list(header.keys())
+                validation_result["has_valid_header"] = True
+                validation_result["header_info"] = {
+                    "algorithm": header.get("alg"),
+                    "type": header.get("typ"),
+                    "keys": list(header.keys()),
                 }
-                
+
             except Exception as e:
-                validation_result['errors'].append(f"Invalid header: {str(e)}")
-            
+                validation_result["errors"].append(f"Invalid header: {str(e)}")
+
             try:
                 # Validate payload
                 payload = decoder.decode_jwt_payload_unsafe(token)
-                validation_result['has_valid_payload'] = True
-                validation_result['payload_info'] = {
-                    'claims_count': len(payload),
-                    'has_expiration': 'exp' in payload,
-                    'has_issued_at': 'iat' in payload,
-                    'claims': list(payload.keys())
+                validation_result["has_valid_payload"] = True
+                validation_result["payload_info"] = {
+                    "claims_count": len(payload),
+                    "has_expiration": "exp" in payload,
+                    "has_issued_at": "iat" in payload,
+                    "claims": list(payload.keys()),
                 }
-                
+
             except Exception as e:
-                validation_result['errors'].append(f"Invalid payload: {str(e)}")
-            
+                validation_result["errors"].append(f"Invalid payload: {str(e)}")
+
             # Overall validation
-            validation_result['is_valid_structure'] = (
-                validation_result['has_three_parts'] and
-                validation_result['has_valid_header'] and
-                validation_result['has_valid_payload']
+            validation_result["is_valid_structure"] = (
+                validation_result["has_three_parts"]
+                and validation_result["has_valid_header"]
+                and validation_result["has_valid_payload"]
             )
-            
-            logger.info(f"JWT structure validation: {'Valid' if validation_result['is_valid_structure'] else 'Invalid'}")
+
+            logger.info(
+                f"JWT structure validation: {'Valid' if validation_result['is_valid_structure'] else 'Invalid'}"
+            )
             return validation_result
-            
+
         except Exception as e:
             error_msg = f"JWT structure validation failed: {str(e)}"
             logger.error(error_msg)
@@ -258,25 +291,27 @@ class TokenValidationKeywords:
         """
         try:
             payload = jwt.decode(token, options={"verify_signature": False})
-            if 'nbf' not in payload:
+            if "nbf" not in payload:
                 return {
-                    'not_before': None,
-                    'is_active': True,
-                    'time_until_active': 0,
-                    'has_not_before': False
+                    "not_before": None,
+                    "is_active": True,
+                    "time_until_active": 0,
+                    "has_not_before": False,
                 }
-            nbf_timestamp = payload['nbf']
+            nbf_timestamp = payload["nbf"]
             nbf_datetime = parse_jwt_timestamp(nbf_timestamp)
             current_time = datetime.now()
             is_active = current_time >= nbf_datetime
             time_until_active = (nbf_datetime - current_time).total_seconds()
             nbf_info = {
-                'not_before': nbf_datetime.isoformat(),
-                'is_active': is_active,
-                'time_until_active': max(0, time_until_active),
-                'has_not_before': True
+                "not_before": nbf_datetime.isoformat(),
+                "is_active": is_active,
+                "time_until_active": max(0, time_until_active),
+                "has_not_before": True,
             }
-            logger.info(f"JWT not before check: {'Active' if is_active else f'Active in {time_until_active} seconds'}")
+            logger.info(
+                f"JWT not before check: {'Active' if is_active else f'Active in {time_until_active} seconds'}"
+            )
             return nbf_info
         except Exception as e:
             error_msg = f"JWT not before check failed: {str(e)}"
@@ -284,9 +319,13 @@ class TokenValidationKeywords:
             raise JWTTokenValidationError(error_msg)
 
     @keyword("Validate JWT Audience")
-    def validate_jwt_audience(self, token: str, expected_audience: Union[str, list],
-                              secret_key: str = None,
-                              verify_signature: bool = False) -> bool:
+    def validate_jwt_audience(
+        self,
+        token: str,
+        expected_audience: Union[str, list],
+        secret_key: str = None,
+        verify_signature: bool = False,
+    ) -> bool:
         """
         Validates JWT token audience claim.
         Arguments:
@@ -302,13 +341,15 @@ class TokenValidationKeywords:
         """
         try:
             from .token_decoding import TokenDecodingKeywords
+
             decoder = TokenDecodingKeywords()
-            payload = decoder.decode_jwt_payload(token, secret_key,
-                                                 verify_signature=verify_signature)
-            if 'aud' not in payload:
+            payload = decoder.decode_jwt_payload(
+                token, secret_key, verify_signature=verify_signature
+            )
+            if "aud" not in payload:
                 logger.info("Token does not contain audience claim")
                 return False
-            actual_audience = payload['aud']
+            actual_audience = payload["aud"]
             # Handle different audience formats
             if isinstance(expected_audience, str):
                 if isinstance(actual_audience, str):
@@ -326,8 +367,9 @@ class TokenValidationKeywords:
                     is_valid = False
             else:
                 is_valid = False
-            logger.info(f"JWT audience validation: "
-                        f"{'Valid' if is_valid else 'Invalid'}")
+            logger.info(
+                f"JWT audience validation: " f"{'Valid' if is_valid else 'Invalid'}"
+            )
             return is_valid
         except Exception as e:
             logger.error(f"JWT audience validation error: {str(e)}")
