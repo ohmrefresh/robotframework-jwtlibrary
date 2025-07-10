@@ -34,8 +34,7 @@ jobs:
 
     - name: Test
       run: |
-        pytest tests/unit
-	    robot --outputdir results tests/robot/acceptance/
+        make test
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
