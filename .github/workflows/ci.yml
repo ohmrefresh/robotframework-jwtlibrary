@@ -25,19 +25,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
+        pip install -e .
 
     - name: Lint with flake8
       run: |
         flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
 
-    - name: build
-      run: |
-        make dev-setup
-
     - name: Test
       run: |
-        make test
+        pytest tests/unit
+	    robot --outputdir results tests/robot/acceptance/
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
