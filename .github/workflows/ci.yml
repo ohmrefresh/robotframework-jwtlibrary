@@ -35,13 +35,9 @@ jobs:
       run: |
         make dev-setup
 
-    - name: Test with pytest
+    - name: Test
       run: |
-        pytest tests/unit --cov=src/JWTLibrary --cov-report=xml
-
-    - name: Robot Framework Tests
-      run: |
-        robot --outputdir results tests/robot/acceptance/
+        make test
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
