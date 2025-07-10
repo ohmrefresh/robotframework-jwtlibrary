@@ -43,11 +43,13 @@ Advanced JWT Claims Validation
     
     # Validate complex nested claims
     ${metadata}=    Get JWT Claim    ${token}    metadata
-    Should Be Equal    ${metadata['department']}    engineering
+    ${metadata}=    Evaluate    json.loads('''${metadata}''')    json
+    Should Be Equal    ${metadata["department"]}    engineering
     Should Be Equal As Integers    ${metadata['clearance']}    5
     
     # Validate array claims
     ${permissions}=    Get JWT Claim    ${token}    permissions
+    ${permissions}=    Evaluate    json.loads('''${permissions}''')    json
     Should Contain    ${permissions}    read
     Should Contain    ${permissions}    write
     Should Contain    ${permissions}    delete
@@ -60,7 +62,7 @@ JWT Token Expiration Edge Cases
     # Test very short expiration (1 minute)
     ${short_payload}=    Create Dictionary    user_id=999    test=short_exp
     ${short_exp_hours}=    Evaluate    1.0/60  # 1 minute in hours
-    ${short_token}=    Generate JWT Token    ${short_payload}    ${SECRET_KEY}    
+    ${short_token}=    Generate JWT Token    ${short_payload}    ${SECRET_KEY}
     ...    expiration_hours=${short_exp_hours}
     
     ${short_exp_info}=    Check JWT Expiration    ${short_token}
@@ -125,7 +127,7 @@ JWT Algorithm Validation
 JWT Claims Type Validation
     [Documentation]    Test JWT claims data type validation
     [Tags]    jwt    types    validation
-    
+
     # Create payload with various data types
     ${complex_payload}=    Create Dictionary
     ...    string_claim=hello
@@ -135,13 +137,13 @@ JWT Claims Type Validation
     ...    list_claim=["item1", "item2", "item3"]
     ...    dict_claim={"nested": "value", "number": 42}
     ...    null_claim=${None}
-    
+
     ${token}=    Generate JWT Token    ${complex_payload}    ${SECRET_KEY}
-    
+
     # Validate claim types
     ${type_validation}=    Validate JWT Claim Types    ${complex_payload}
     Should Be True    ${type_validation['is_valid']}
-    
+
     # Extract and verify each claim type
     ${string_val}=    Get JWT Claim    ${token}    string_claim
     ${int_val}=    Get JWT Claim    ${token}    integer_claim
@@ -150,14 +152,15 @@ JWT Claims Type Validation
     ${list_val}=    Get JWT Claim    ${token}    list_claim
     ${dict_val}=    Get JWT Claim    ${token}    dict_claim
     ${null_val}=    Get JWT Claim    ${token}    null_claim
-    
+
     # Verify types are preserved
     Should Be Equal    ${string_val}    hello
     Should Be Equal As Integers    ${int_val}    123
     Should Be Equal As Numbers    ${float_val}    45.67
     Should Be Equal    ${bool_val}    ${True}
     Should Be Equal    ${list_val}    ["item1", "item2", "item3"]
-    Should Be Equal    ${dict_val['nested']}    value
+    ${dict_val}=    Evaluate    json.loads('''${dict_val}''')    json
+    Should Be Equal    ${dict_val["nested"]}    value
     Should Be Equal As Integers    ${dict_val['number']}    42
     Should Be Equal    ${null_val}    ${None}
 
@@ -226,10 +229,12 @@ JWT Claims Extraction and Analysis
     [Tags]    jwt    claims    extraction    analysis
     
     # Create comprehensive payload
+   # Create audience list
+    @{audience_list}=    Create List    api-service    web-app
     ${comprehensive_payload}=    Create Dictionary
     ...    iss=auth-service
     ...    sub=user-12345
-    ...    aud=["api-service", "web-app"]
+    ...    aud=${audience_list}
     ...    user_id=12345
     ...    username=advanced_user
     ...    email=user@company.com
@@ -237,6 +242,7 @@ JWT Claims Extraction and Analysis
     ...    permissions={"read": true, "write": true, "delete": false}
     ...    profile={"name": "John Doe", "department": "Engineering"}
     ...    settings={"theme": "dark", "notifications": true}
+
     
     ${token}=    Generate JWT Token    ${comprehensive_payload}    ${SECRET_KEY}
     

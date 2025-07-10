@@ -292,7 +292,7 @@ class TokenValidationKeywords:
             
             nbf_timestamp = payload['nbf']
             nbf_datetime = parse_jwt_timestamp(nbf_timestamp)
-            current_time = datetime.utcnow()
+            current_time = datetime.now()
             
             is_active = current_time >= nbf_datetime
             time_until_active = (nbf_datetime - current_time).total_seconds()

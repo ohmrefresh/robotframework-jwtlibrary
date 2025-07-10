@@ -3,6 +3,7 @@ Documentation     Basic JWT operations test suite
 Library           JWTLibrary
 Library           Collections
 Library           BuiltIn
+Library           String
 
 *** Variables ***
 ${SECRET_KEY}     my_test_secret_key_123
@@ -279,13 +280,13 @@ Decode JWT Without Verification
     [Documentation]    Test decoding JWT without signature verification
     [Tags]    jwt    unsafe-decoding
     
-    ${payload}=    Create Dictionary    user_id=666    unsafe=true
+    ${payload}=    Create Dictionary    user_id=666    unsafe=True
     ${token}=    Generate JWT Token    ${payload}    ${SECRET_KEY}
     
     # Decode without verification (unsafe)
     ${decoded_unsafe}=    Decode JWT Payload    ${token}    verify_signature=False
     Should Be Equal As Integers    ${decoded_unsafe['user_id']}    666
-    Should Be Equal    ${decoded_unsafe['unsafe']}    ${True}
+    Should Be Equal    ${decoded_unsafe['unsafe']}    True
     
     # Should work even with wrong or no secret key
     ${decoded_no_secret}=    Decode JWT Payload Unsafe    ${token}
