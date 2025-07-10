@@ -4,7 +4,6 @@ import argparse
 import json
 import sys
 from datetime import datetime
-from typing import Dict, Any
 
 from .jwt_library import JWTLibrary
 from .version import __version__
@@ -35,15 +34,12 @@ Examples:
   jwt-robot-tool compare --token1 <token1> --token2 <token2>
         """
     )
-    
     parser.add_argument(
         '--version', 
         action='version', 
         version=f'JWT Library {__version__}'
     )
-    
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
     # Generate command
     generate_parser = subparsers.add_parser(
         'generate', 
@@ -75,7 +71,6 @@ Examples:
         action='store_true',
         help='Generate token without expiration'
     )
-    
     # Decode command
     decode_parser = subparsers.add_parser(
         'decode', 
@@ -100,7 +95,6 @@ Examples:
         action='store_true',
         help='Decode without signature verification'
     )
-    
     # Validate command
     validate_parser = subparsers.add_parser(
         'validate', 
@@ -125,7 +119,6 @@ Examples:
         '--expected-claims',
         help='JSON object of expected claims'
     )
-    
     # Info command
     info_parser = subparsers.add_parser(
         'info', 
@@ -152,7 +145,6 @@ Examples:
         required=True,
         help='Second JWT token'
     )
-    
     # Verify command
     verify_parser = subparsers.add_parser(
         'verify', 
@@ -173,7 +165,6 @@ Examples:
         default='HS256',
         help='JWT algorithm (default: HS256)'
     )
-    
     return parser
 
 
@@ -200,7 +191,6 @@ def command_generate(args, jwt_lib: JWTLibrary) -> int:
         info = jwt_lib.get_jwt_token_info(token)
         print("Token Information:")
         print(json.dumps(info, indent=2, default=str))
-        
         return 0
         
     except json.JSONDecodeError as e:
@@ -229,7 +219,6 @@ def command_decode(args, jwt_lib: JWTLibrary) -> int:
                 args.token, verify_signature=False
             )
             print("⚠ Token decoded without verification (unsafe)")
-        
         print()
         print("Decoded Payload:")
         print(json.dumps(payload, indent=2, default=str))
@@ -239,7 +228,6 @@ def command_decode(args, jwt_lib: JWTLibrary) -> int:
         print()
         print("Token Header:")
         print(json.dumps(header, indent=2))
-        
         return 0
         
     except JWTLibraryError as e:
@@ -455,14 +443,11 @@ def main() -> int:
     """Main CLI entry point."""
     parser = create_parser()
     args = parser.parse_args()
-    
     if not args.command:
         parser.print_help()
         return 1
-    
     # Initialize JWT Library
     jwt_lib = JWTLibrary()
-    
     # Route to appropriate command handler
     command_handlers = {
         'generate': command_generate,
@@ -472,7 +457,6 @@ def main() -> int:
         'compare': command_compare,
         'verify': command_verify,
     }
-    
     handler = command_handlers.get(args.command)
     if handler:
         return handler(args, jwt_lib)

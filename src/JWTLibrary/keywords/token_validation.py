@@ -1,14 +1,14 @@
 """Token validation keywords for JWT Library."""
 
 import jwt
-from datetime import datetime
-from typing import Dict, Any, Union, Optional
+from datetime import datetime, timezone
+from typing import Dict, Any, Union
 from robot.api.deco import keyword
 from robot.api import logger
 
 from ..constants import DEFAULT_ALGORITHM
 from ..exceptions import JWTTokenValidationError
-from ..utils import validate_algorithm, parse_jwt_timestamp, safe_json_dumps
+from ..utils import validate_algorithm, parse_jwt_timestamp
 
 
 class TokenValidationKeywords:
@@ -18,15 +18,12 @@ class TokenValidationKeywords:
     def verify_jwt_token(self, token: str, secret_key: str, algorithm: str = None) -> bool:
         """
         Verifies if a JWT token is valid and not expired.
-        
         Arguments:
         - ``token``: JWT token string to verify
         - ``secret_key``: Secret key used for verification
         - ``algorithm``: JWT algorithm (default: HS256)
-        
         Returns:
         - True if token is valid, False otherwise
-        
         Examples:
         | ${is_valid}=    Verify JWT Token    ${token}    my_secret_key
         | Should Be True    ${is_valid}
@@ -38,7 +35,6 @@ class TokenValidationKeywords:
             jwt.decode(token, secret_key, algorithms=[algorithm])
             logger.info("JWT token verification successful")
             return True
-            
         except (jwt.ExpiredSignatureError, jwt.InvalidSignatureError, jwt.InvalidTokenError):
             logger.info("JWT token verification failed")
             return False
@@ -50,17 +46,14 @@ class TokenValidationKeywords:
     def check_jwt_expiration(self, token: str, secret_key: str = None) -> Dict[str, Any]:
         """
         Checks JWT token expiration details.
-        
         Arguments:
         - ``token``: JWT token string
         - ``secret_key``: Secret key for verification (optional)
-        
         Returns:
         - Dictionary with expiration information:
           - expires_at: Expiration timestamp
           - is_expired: Boolean indicating if token is expired
           - time_until_expiry: Seconds until expiration (negative if expired)
-        
         Examples:
         | ${exp_info}=    Check JWT Expiration    ${token}
         | Should Be True    ${exp_info['is_expired']} == False
@@ -76,24 +69,22 @@ class TokenValidationKeywords:
                     'time_until_expiry': None,
                     'has_expiration': False
                 }
-            
             exp_timestamp = payload['exp']
             exp_datetime = parse_jwt_timestamp(exp_timestamp)
-            current_time = datetime.now()
-            
+            current_time = datetime.now(tz=timezone.utc)
+            # Ensure both datetimes are timezone-aware for comparison
+            if exp_datetime.tzinfo is None:
+                exp_datetime = exp_datetime.replace(tzinfo=timezone.utc)
             is_expired = current_time > exp_datetime
             time_until_expiry = (exp_datetime - current_time).total_seconds()
-            
             expiration_info = {
                 'expires_at': exp_datetime.isoformat(),
                 'is_expired': is_expired,
                 'time_until_expiry': time_until_expiry,
                 'has_expiration': True
             }
-            
             logger.info(f"Token expiration check: expires in {time_until_expiry} seconds")
             return expiration_info
-            
         except Exception as e:
             error_msg = f"JWT expiration check failed: {str(e)}"
             logger.error(error_msg)
@@ -104,13 +95,11 @@ class TokenValidationKeywords:
                            secret_key: str = None, verify_signature: bool = False) -> bool:
         """
         Validates that JWT token contains expected claims with correct values.
-        
         Arguments:
         - ``token``: JWT token string
         - ``expected_claims``: Dictionary of expected claim key-value pairs
         - ``secret_key``: Secret key (required if verify_signature is True)
         - ``verify_signature``: Whether to verify token signature
-        
         Returns:
         - True if all expected claims match, False otherwise
         
@@ -129,7 +118,6 @@ class TokenValidationKeywords:
             # Check each expected claim
             mismatched_claims = []
             missing_claims = []
-            
             for claim_name, expected_value in expected_claims.items():
                 if claim_name not in payload:
                     missing_claims.append(claim_name)
@@ -155,14 +143,11 @@ class TokenValidationKeywords:
     def check_jwt_algorithm(self, token: str, expected_algorithm: str) -> bool:
         """
         Checks if JWT token uses expected algorithm.
-        
         Arguments:
         - ``token``: JWT token string
         - ``expected_algorithm``: Expected algorithm (e.g., HS256, RS256)
-        
         Returns:
         - True if algorithm matches, False otherwise
-        
         Examples:
         | ${correct_alg}=    Check JWT Algorithm    ${token}    HS256
         | Should Be True    ${correct_alg}
@@ -189,13 +174,10 @@ class TokenValidationKeywords:
     def validate_jwt_structure(self, token: str) -> Dict[str, Any]:
         """
         Validates JWT token structure and returns detailed information.
-        
         Arguments:
         - ``token``: JWT token string
-        
         Returns:
         - Dictionary with structure validation results
-        
         Examples:
         | ${structure}=    Validate JWT Structure    ${token}
         | Should Be True    ${structure['is_valid_structure']}
@@ -210,7 +192,6 @@ class TokenValidationKeywords:
                 'payload_info': None,
                 'errors': []
             }
-            
             # Check if token has three parts
             parts = token.split('.')
             if len(parts) == 3:
@@ -222,7 +203,6 @@ class TokenValidationKeywords:
             try:
                 from .token_decoding import TokenDecodingKeywords
                 decoder = TokenDecodingKeywords()
-                
                 # Validate header
                 header = decoder.decode_jwt_header(token)
                 validation_result['has_valid_header'] = True
@@ -268,20 +248,16 @@ class TokenValidationKeywords:
     def check_jwt_not_before(self, token: str) -> Dict[str, Any]:
         """
         Checks JWT token 'not before' (nbf) claim.
-        
         Arguments:
         - ``token``: JWT token string
-        
         Returns:
         - Dictionary with 'not before' information
-        
         Examples:
         | ${nbf_info}=    Check JWT Not Before    ${token}
         | Should Be True    ${nbf_info['is_active']}
         """
         try:
             payload = jwt.decode(token, options={"verify_signature": False})
-            
             if 'nbf' not in payload:
                 return {
                     'not_before': None,
@@ -289,24 +265,19 @@ class TokenValidationKeywords:
                     'time_until_active': 0,
                     'has_not_before': False
                 }
-            
             nbf_timestamp = payload['nbf']
             nbf_datetime = parse_jwt_timestamp(nbf_timestamp)
             current_time = datetime.now()
-            
             is_active = current_time >= nbf_datetime
             time_until_active = (nbf_datetime - current_time).total_seconds()
-            
             nbf_info = {
                 'not_before': nbf_datetime.isoformat(),
                 'is_active': is_active,
                 'time_until_active': max(0, time_until_active),
                 'has_not_before': True
             }
-            
             logger.info(f"JWT not before check: {'Active' if is_active else f'Active in {time_until_active} seconds'}")
             return nbf_info
-            
         except Exception as e:
             error_msg = f"JWT not before check failed: {str(e)}"
             logger.error(error_msg)
@@ -314,19 +285,17 @@ class TokenValidationKeywords:
 
     @keyword("Validate JWT Audience")
     def validate_jwt_audience(self, token: str, expected_audience: Union[str, list],
-                             secret_key: str = None, verify_signature: bool = False) -> bool:
+                              secret_key: str = None,
+                              verify_signature: bool = False) -> bool:
         """
         Validates JWT token audience claim.
-        
         Arguments:
         - ``token``: JWT token string
         - ``expected_audience``: Expected audience (string or list)
         - ``secret_key``: Secret key (required if verify_signature is True)
         - ``verify_signature``: Whether to verify token signature
-        
         Returns:
         - True if audience matches, False otherwise
-        
         Examples:
         | ${valid_aud}=    Validate JWT Audience    ${token}    my-api
         | ${valid_aud}=    Validate JWT Audience    ${token}    ["api1", "api2"]
@@ -334,15 +303,12 @@ class TokenValidationKeywords:
         try:
             from .token_decoding import TokenDecodingKeywords
             decoder = TokenDecodingKeywords()
-            
-            payload = decoder.decode_jwt_payload(token, secret_key, verify_signature=verify_signature)
-            
+            payload = decoder.decode_jwt_payload(token, secret_key,
+                                                 verify_signature=verify_signature)
             if 'aud' not in payload:
                 logger.info("Token does not contain audience claim")
                 return False
-            
             actual_audience = payload['aud']
-            
             # Handle different audience formats
             if isinstance(expected_audience, str):
                 if isinstance(actual_audience, str):
@@ -360,10 +326,9 @@ class TokenValidationKeywords:
                     is_valid = False
             else:
                 is_valid = False
-            
-            logger.info(f"JWT audience validation: {'Valid' if is_valid else 'Invalid'}")
+            logger.info(f"JWT audience validation: "
+                        f"{'Valid' if is_valid else 'Invalid'}")
             return is_valid
-            
         except Exception as e:
             logger.error(f"JWT audience validation error: {str(e)}")
             return False

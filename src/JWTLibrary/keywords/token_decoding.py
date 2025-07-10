@@ -1,7 +1,7 @@
 """Token decoding keywords for JWT Library."""
 
 import jwt
-from typing import Dict, Any, Union
+from typing import Dict, Any
 from robot.api.deco import keyword
 from robot.api import logger
 
@@ -229,23 +229,22 @@ class TokenDecodingKeywords:
         | ${all_claims}=    Extract All JWT Claims    ${token}
         | ${all_claims}=    Extract All JWT Claims    ${token}    my_secret_key    True
         """
+        from ..constants import STANDARD_CLAIMS
         try:
             # Get payload and header
             payload = self.decode_jwt_payload(token, secret_key, verify_signature=verify_signature)
             header = self.decode_jwt_header(token)
-            
+
             # Separate standard and custom claims
             standard_claims = {}
             custom_claims = {}
-            
-            from ..constants import STANDARD_CLAIMS
-            
+
             for key, value in payload.items():
                 if key in STANDARD_CLAIMS:
                     standard_claims[key] = value
                 else:
                     custom_claims[key] = value
-            
+
             result = {
                 'header': header,
                 'standard_claims': standard_claims,
@@ -253,10 +252,10 @@ class TokenDecodingKeywords:
                 'all_payload': payload,
                 'total_claims': len(payload)
             }
-            
+
             logger.info(f"Extracted all claims: {len(payload)} total claims")
             return result
-            
+
         except JWTTokenDecodingError:
             raise
         except Exception as e:

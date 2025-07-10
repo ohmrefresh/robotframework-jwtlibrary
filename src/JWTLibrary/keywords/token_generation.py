@@ -1,9 +1,8 @@
 """Token generation keywords for JWT Library."""
-import datetime
 
 import jwt
-from datetime import datetime,timezone
-from typing import Dict, Any, Optional
+from datetime import datetime, timezone
+from typing import Dict, Any
 from robot.api.deco import keyword
 from robot.api import logger
 
@@ -62,7 +61,6 @@ class TokenGenerationKeywords:
             
             # Generate the token
             token = jwt.encode(token_payload, secret_key, algorithm=algorithm)
-            print(token)
             
             logger.info(f"JWT token generated successfully with algorithm: {algorithm}")
             logger.debug(f"Token payload: {safe_json_dumps(payload, indent=2)}")

@@ -201,7 +201,6 @@ class JWTLibrary(TokenGenerationKeywords, TokenDecodingKeywords,
 # For backward compatibility and direct import
 if __name__ == "__main__":
     # Example usage when run directly
-    import json
     
     print("JWT Library Example Usage")
     print("=" * 50)
@@ -234,7 +233,6 @@ if __name__ == "__main__":
     exp_info = jwt_lib.check_jwt_expiration(token)
     print(f"Expires At: {exp_info['expires_at']}")
     print(f"Is Expired: {exp_info['is_expired']}")
-    
     # Example 4: Claim validation
     print("\n4. Claim Validation:")
     expected_claims = {"user_id": 123, "role": "admin"}
@@ -247,5 +245,4 @@ if __name__ == "__main__":
     future_ts = jwt_lib.generate_future_timestamp(hours=1)
     print(f"Current Timestamp: {current_ts}")
     print(f"Future Timestamp: {future_ts}")
-    
     print("\nJWT Library examples completed successfully!")
