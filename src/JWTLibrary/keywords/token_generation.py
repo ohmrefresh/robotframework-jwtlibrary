@@ -1,7 +1,8 @@
 """Token generation keywords for JWT Library."""
+import datetime
 
 import jwt
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import Dict, Any, Optional
 from robot.api.deco import keyword
 from robot.api import logger
@@ -49,7 +50,7 @@ class TokenGenerationKeywords:
             token_payload = validate_payload(token_payload)
             
             # Add standard JWT claims
-            now = datetime.utcnow()
+            now = datetime.now(tz=timezone.utc)
             
             # Only add standard claims if they don't already exist
             if 'iat' not in token_payload:
@@ -61,6 +62,7 @@ class TokenGenerationKeywords:
             
             # Generate the token
             token = jwt.encode(token_payload, secret_key, algorithm=algorithm)
+            print(token)
             
             logger.info(f"JWT token generated successfully with algorithm: {algorithm}")
             logger.debug(f"Token payload: {safe_json_dumps(payload, indent=2)}")
@@ -172,7 +174,7 @@ class TokenGenerationKeywords:
             token_payload = validate_payload(payload.copy())
             
             # Add standard claims with custom expiration
-            now = datetime.utcnow()
+            now = datetime.now(tz=timezone.utc)
             token_payload['iat'] = now
             token_payload['exp'] = expiration_datetime
             token_payload['nbf'] = now

@@ -214,6 +214,7 @@ if __name__ == "__main__":
     secret_key = "my_secret_key_123"
     
     token = jwt_lib.generate_jwt_token(payload, secret_key)
+
     print(f"Generated Token: {token[:50]}...")
     
     decoded_payload = jwt_lib.decode_jwt_payload(token, secret_key)

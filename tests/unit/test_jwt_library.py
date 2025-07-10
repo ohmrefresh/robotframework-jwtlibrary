@@ -2,7 +2,7 @@
 
 import pytest
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch, MagicMock
 import time
 from JWTLibrary.jwt_library import JWTLibrary
@@ -116,7 +116,7 @@ class TestJWTLibrary:
     def test_decode_jwt_payload_expired_token(self):
         """Test decoding expired JWT token."""
         # Create token that expires immediately
-        past_time = datetime.utcnow() - timedelta(hours=1)
+        past_time = datetime.now(tz=timezone.utc) - timedelta(hours=1)
         token = self.jwt_lib.generate_jwt_token_with_custom_expiration(
             self.test_payload, 
             self.secret_key, 
